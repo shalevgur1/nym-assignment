@@ -3,3 +3,4 @@ To run the example test_api.py script:
 2. Create a .venv folder.
 3. Activate the .venv.
 4. Install the requirements specified in requirements.txt.
+5. Run: python test_api.py

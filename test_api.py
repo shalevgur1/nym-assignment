@@ -13,6 +13,7 @@ def main():
     api_instance = NymAssignmentApi()
     page_to_words = api_instance.pdf_to_dict(PDF_PATH_1)
     result = api_instance.populate_chart(page_to_words)
+    print(result.to_string())
 
 
 

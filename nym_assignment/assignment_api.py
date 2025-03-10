@@ -27,6 +27,9 @@ class Chart:
             # Didn't have birthday this year yet
             age -= 1
         return age
+    
+    def to_string(self) -> str:
+        return f"Name: {self.name}\nDate of Birth: {self.dob}\nAge: {self.age}\nValid EKG: {self.has_valid_ekg}"
 
 
 PagesToWords = Dict[int, List[TextualWord]]

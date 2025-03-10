@@ -12,6 +12,15 @@ class TextualWord:
     x1: float 
     text: str 
 
+@dataclass 
+class ExtraTextualWord(TextualWord): 
+
+    fontname: str 
+    size: float 
+
+    @property 
+    def is_bold(self) -> bool: 
+        return 'Bold' in self.fontname 
 
 @dataclass 
 class Chart: 
@@ -33,6 +42,7 @@ class Chart:
 
 
 PagesToWords = Dict[int, List[TextualWord]]
+PagesToExtraWords = Dict[int, List[ExtraTextualWord]] 
 
 class NymAssignmentApi:
     
@@ -131,3 +141,47 @@ class NymAssignmentApi:
         current_chart = Chart(name=current_name, dob=current_dob, has_valid_ekg=current_has_valid_ekg)
 
         return current_chart
+    
+    def extract_font_info(self, word):
+        fontname = word.get('fontname', 'Unknown')  # Get font name (if available)
+        size = float(word.get('size', 0))  # Extract font size (if available)
+        return fontname, size
+
+    def pdf_to_extra_dict(self, pdf_path: str)-> PagesToExtraWords:
+        # Uses the pdfplumber tool to extract pdf text and divide it to words
+        # for every page (as requested in the question). Take every char of in the pdf
+        # and create words from it. The reason to implement it in this way is because the 
+        # extract_words method used in the task before doesn't have the size and fontname 
+        # attributes while the .chars attribute of the page object has.
+
+        current_PagesToExtraWords: PagesToExtraWords = {}
+
+        with pdfplumber.open(pdf_path) as pdf:
+            # Extract text from pdf using given path
+
+            current_x0 = 0.0
+            current_word = ''
+            current_size = 0.0
+            current_fontname = ''
+            
+            for page in pdf.pages:
+                current_number = page.page_number
+                for c in page.chars:
+                    if c['text'] == ' ' and current_word != ' ' and current_word:
+                        # Set new word when incounter space
+                        current_textual_word = ExtraTextualWord(x0=current_x0, x1=c['x1'], text=current_word, size=current_size, fontname=current_fontname)
+                        if current_number not in current_PagesToExtraWords:
+                            current_PagesToExtraWords[current_number] = []
+                        current_PagesToExtraWords[current_number].append(current_textual_word)
+                        current_word = ''
+                        continue
+                    elif not current_word and c['text'] != ' ':
+                        # Set word attributes according to first char
+                        current_x0 = c['x0']
+                        current_size = c['size']
+                        current_fontname = c['fontname']
+                    if c['text'] != ' ':
+                        # Add char to word
+                        current_word += c['text']
+        
+        return current_PagesToExtraWords
